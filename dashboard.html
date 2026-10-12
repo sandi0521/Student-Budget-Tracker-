@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+< lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Budget Tracker | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body onload="loadDashboard()">
+
+<header>
+    <h1>💰 StudentBudget Tracker</h1>
+    <p>Smart Budgeting for Every Student</p>
+</header>
+
+<div class="dashboard">
+
+    <h2 id="welcomeUser">Welcome 👋</h2>
+<!-- Theme Toggle -->
+<div class="menu-card theme-card">
+
+    <h3>🎨 Appearance</h3>
+
+    <button
+        type="button"
+        id="themeToggle"
+        onclick="toggleDarkMode()">
+        🌙 Enable Dark Mode
+    </button>
+<!-- Notification Centre -->
+<div class="menu-card notification-panel">
+
+    <h3>
+        🔔 Notifications
+        <span id="notificationCount" class="notification-count">0</span>
+    </h3>
+
+    <div id="notificationList">
+
+        <p>Loading notifications...</p>
+
+    </div>
+
+    <button
+        type="button"
+        onclick="markNotificationsRead()">
+        Mark All as Read
+    </button>
+
+    <button
+        type="button"
+        onclick="clearNotifications()">
+        Clear Notifications
+    </button>
+
+</div>
+</div>
+    <!-- Financial Health -->
+    <div class="menu-card">
+        <h3>💚 Financial Health</h3>
+        <h2 id="healthScore">100%</h2>
+        <p id="healthStatus">Excellent</p>
+    </div>
+
+    <!-- Budget Progress -->
+    <div class="menu-card">
+        <h3>📈 Budget Progress</h3>
+
+        <div class="progress-container">
+            <div id="budgetProgress" class="progress-bar"></div>
+        </div>
+
+        <p id="progressText">0%</p>
+    </div>
+
+    <!-- Quick Summary -->
+    <div class="summary">
+
+        <div class="summary-card">
+            <h3>💵 Income</h3>
+            <p id="dashIncome">R0.00</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>🧾 Expenses</h3>
+            <p id="dashExpenses">R0.00</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>💰 Balance</h3>
+            <p id="dashBalance">R0.00</p>
+        </div>
+
+    </div>
+
+    <!-- Statistics -->
+    <div class="summary">
+
+        <div class="summary-card">
+            <h3>📈 Savings Rate</h3>
+            <p id="savingRate">0%</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>💸 Spending Rate</h3>
+            <p id="spendingRate">0%</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>💡 Budget Advice</h3>
+            <p id="dashboardAdvice">Keep Saving!</p>
+        </div>
+
+    </div>
+
+    <!-- Menu -->
+    <div class="menu-card" onclick="window.location.href='budget.html'">
+        <h3>📊 Budget Calculator</h3>
+        <p>Manage your monthly budget.</p>
+    </div>
+
+    <div class="menu-card" onclick="window.location.href='chatbot.html'">
+        <h3>🤖 Student Budget Tracker AI</h3>
+        <p>Get smart budgeting advice.</p>
+    </div>
+
+    <div class="menu-card" onclick="window.location.href='report.html'">
+        <h3>📄 Budget Report</h3>
+        <p>View your financial report.</p>
+    </div>
+    
+    
+    <div class="menu-card" onclick="window.location.href='about.html'">
+        <h3> ℹ️ About Student Budget Tracker</h3>
+        <p>Helping students build better financial habits.</p>
+    </div>
+
+    <div class="menu-card" onclick="window.location.href='contact.html'">
+        <h3>📞 Contact Us</h3>
+        <p>Get support from Student Budget Tracker.</p>
+    </div>
+<!-- TRANSACTION HISTORY -->
+<section class="transaction-section">
+
+    <h2>📜 Transaction History</h2>
+
+    <form id="transactionForm" onsubmit="event.preventDefault(); addTransaction();">
+
+        <label for="transactionType">Transaction Type</label>
+
+        <select id="transactionType" required>
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+        </select>
+
+        <label for="transactionDescription">Description</label>
+
+        <input
+            type="text"
+            id="transactionDescription"
+            placeholder="e.g. Groceries, Transport, Allowance"
+            maxlength="100"
+            required
+        >
+
+        <label for="transactionAmount">Amount (R)</label>
+
+        <input
+            type="number"
+            id="transactionAmount"
+            placeholder="Enter amount"
+            min="0.01"
+            step="0.01"
+            required
+        >
+
+        <label for="transactionDate">Date</label>
+
+        <input
+            type="date"
+            id="transactionDate"
+            required
+        >
+
+        <button type="submit">Add Transaction</button>
+
+    </form>
+<!-- TRANSACTION SUMMARY -->
+<div class="transaction-summary">
+
+    <div class="summary-card income-card">
+        <h3>Total Income</h3>
+        <p id="transactionTotalIncome">R0.00</p>
+    </div>
+
+    <div class="summary-card expense-card">
+        <h3>Total Expenses</h3>
+        <p id="transactionTotalExpenses">R0.00</p>
+    </div>
+
+    <div class="summary-card balance-card">
+        <h3>Remaining Balance</h3>
+        <p id="transactionTotalBalance">R0.00</p>
+    </div>
+
+</div>
+    <h3>Your Transactions</h3>
+
+    <div id="transactionList">
+        <p>Loading transactions...</p>
+    </div>
+
+</section>
+    <div class="menu-card" onclick="logout()">
+        <h3>🚪 Logout</h3>
+        <p>Sign out of your account.</p>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
