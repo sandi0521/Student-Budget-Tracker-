@@ -1,978 +1,967 @@
+// ==========================================
+// Student Budget Tracker Version 5.0
+// Part 1 - Authentication
+// ==========================================
 
-/* =====================================
-   STUDENT BUDGET TRACKER
-   Complete JavaScript
-===================================== */
+// ==========================
+// SHOW / HIDE PASSWORD
+// ==========================
 
-"use strict";
+function togglePassword(inputId, button) {
 
-// Storage keys
-const USERS_KEY = "sbt_users_v1";
-const SESSION_KEY = "sbt_session_v1";
-const THEME_KEY = "sbt_theme_v1";
+const input = document.getElementById(inputId);  
 
-let currentUser = null;
-let budgetChart = null;
-let latestBudget = null;
+if (!input) return;  
 
-// HTML element helper
-function getElement(id) {
-    return document.getElementById(id);
+if (input.type === "password") {  
+    input.type = "text";  
+    button.innerHTML = "🙈";  
+} else {  
+    input.type = "password";  
+    button.innerHTML = "👁️";  
 }
 
-// Display text safely
-function setText(id, value) {
-    const element = getElement(id);
-
-    if (element) {
-        element.textContent = value;
-    }
 }
 
-// Format South African rand
-function money(value) {
-    return new Intl.NumberFormat("en-ZA", {
-        style: "currency",
-        currency: "ZAR",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(value);
+// ==========================
+// REGISTER
+// ==========================
+
+function register() {
+
+const fullName = document.getElementById("fullName").value.trim();  
+const studentNumber = document.getElementById("studentNumber").value.trim();  
+const email = document.getElementById("email").value.trim();  
+const password = document.getElementById("password").value;  
+const confirmPassword = document.getElementById("confirmPassword").value;  
+
+if (  
+    fullName === "" ||  
+    studentNumber === "" ||  
+    email === "" ||  
+    password === "" ||  
+    confirmPassword === ""  
+) {  
+    alert("Please complete all fields.");  
+    return;  
+}  
+
+if (password !== confirmPassword) {  
+    alert("Passwords do not match.");  
+    return;  
+}  
+
+localStorage.setItem("fullName", fullName);  
+localStorage.setItem("studentNumber", studentNumber);  
+localStorage.setItem("email", email);  
+localStorage.setItem("password", password);  
+
+alert("Account created successfully!");  
+
+window.location.href = "index.html";
+
 }
 
-// Get a storage key for the current user's budget
-function userStorageKey(type) {
-    return "sbt_" + type + "_" + currentUser.email.toLowerCase();
+// ==========================
+// LOGIN
+// ==========================
+
+function login() {
+
+const studentNumber = document.getElementById("loginStudentNumber").value.trim();  
+const password = document.getElementById("loginPassword").value;  
+
+const savedStudent = localStorage.getItem("studentNumber");  
+const savedPassword = localStorage.getItem("password");  
+
+if (studentNumber === savedStudent && password === savedPassword) {  
+
+    alert("Login Successful!");  
+
+    window.location.href = "dashboard.html";  
+
+} else {  
+
+    alert("Invalid Student Number or Password.");  
+
 }
 
-// Safely read JSON from localStorage
-function readJSON(key, fallback) {
-    try {
-        const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : fallback;
-    } catch (error) {
-        console.error("Could not read saved data:", error);
-        return fallback;
-    }
 }
 
-// Save JSON to localStorage
-function saveJSON(key, value) {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-        return true;
-    } catch (error) {
-        console.error("Could not save data:", error);
-        alert("Your browser could not save the data. Check its storage settings.");
-        return false;
-    }
-}
-
-// User account helpers
-function getUsers() {
-    return readJSON(USERS_KEY, []);
-}
-
-function saveUsers(users) {
-    return saveJSON(USERS_KEY, users);
-}
-
-// Show the correct page
-function showPage(pageName) {
-    ["loginPage", "signupPage", "dashboard"].forEach(function (id) {
-        const element = getElement(id);
-
-        if (element) {
-            element.classList.add("hidden");
-        }
-    });
-
-    const selectedPage = getElement(pageName);
-
-    if (selectedPage) {
-        selectedPage.classList.remove("hidden");
-    }
-}
-
-// =====================================
-// SIGN UP
-// =====================================
-
-function register(event) {
-    event.preventDefault();
-
-    const name = getElement("signupName").value.trim();
-    const studentNumber = getElement("signupStudentNumber").value.trim();
-    const email = getElement("signupEmail").value.trim().toLowerCase();
-    const password = getElement("signupPassword").value;
-    const confirmPassword = getElement("confirmPassword").value;
-
-    if (!name || !studentNumber || !email || !password) {
-        alert("Please complete all the fields.");
-        return;
-    }
-
-    if (password.length < 8) {
-        alert("Your password must contain at least 8 characters.");
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        alert("The passwords do not match.");
-        return;
-    }
-
-    const users = getUsers();
-
-    const emailExists = users.some(function (user) {
-        return user.email.toLowerCase() === email;
-    });
-
-    if (emailExists) {
-        alert("An account with this email already exists.");
-        return;
-    }
-
-    const studentExists = users.some(function (user) {
-        return user.studentNumber.toLowerCase() ===
-            studentNumber.toLowerCase();
-    });
-
-    if (studentExists) {
-        alert("This student number is already registered.");
-        return;
-    }
-
-    // DEMO ONLY: passwords are stored locally and are not encrypted.
-    // Do not use real passwords or personal information with this demo.
-    const newUser = {
-        name: name,
-        studentNumber: studentNumber,
-        email: email,
-        password: password
-    };
-
-    users.push(newUser);
-
-    if (!saveUsers(users)) {
-        return;
-    }
-
-    getElement("signupForm").reset();
-    getElement("loginEmail").value = email;
-
-    showPage("loginPage");
-    alert("Account created successfully. You can now log in.");
-}
-
-// =====================================
-// LOG IN
-// =====================================
-
-function login(event) {
-    event.preventDefault();
-
-    const email = getElement("loginEmail").value.trim().toLowerCase();
-    const password = getElement("loginPassword").value;
-
-    const user = getUsers().find(function (savedUser) {
-        return savedUser.email.toLowerCase() === email &&
-            savedUser.password === password;
-    });
-
-    if (!user) {
-        alert("Incorrect email or password.");
-        return;
-    }
-
-    currentUser = {
-        name: user.name,
-        studentNumber: user.studentNumber,
-        email: user.email
-    };
-
-    try {
-        sessionStorage.setItem(SESSION_KEY, currentUser.email);
-    } catch (error) {
-        console.error("Could not save the session:", error);
-    }
-
-    getElement("loginForm").reset();
-    openDashboard();
-}
-
-// =====================================
-// LOG OUT
-// =====================================
+// ==========================
+// LOGOUT
+// ==========================
 
 function logout() {
-    currentUser = null;
 
-    try {
-        sessionStorage.removeItem(SESSION_KEY);
-    } catch (error) {
-        console.error("Could not clear the session:", error);
-    }
+if (confirm("Are you sure you want to logout?")) {  
 
-    latestBudget = null;
+    window.location.href = "index.html";  
 
-    if (budgetChart) {
-        budgetChart.destroy();
-        budgetChart = null;
-    }
-
-    showPage("loginPage");
 }
 
-// =====================================
-// OPEN DASHBOARD
-// =====================================
+}
+// ==========================================
+// PART 2 - BUDGET CALCULATOR
+// ==========================================
 
-function openDashboard() {
-    if (!currentUser) {
-        showPage("loginPage");
-        return;
-    }
+function calculateBudget() {
 
-    showPage("dashboard");
+// Get values from the form  
+const income = Number(document.getElementById("income").value) || 0;  
+const food = Number(document.getElementById("food").value) || 0;  
+const transport = Number(document.getElementById("transport").value) || 0;  
+const accommodation = Number(document.getElementById("accommodation").value) || 0;  
+const books = Number(document.getElementById("books").value) || 0;  
+const entertainment = Number(document.getElementById("entertainment").value) || 0;  
 
-    setText("welcomeMessage", "Welcome, " + currentUser.name + "!");
+// Validate income  
+if (income <= 0) {  
+    alert("Please enter a valid monthly income.");  
+    return;  
+}  
 
-    latestBudget = null;
+// Calculate totals  
+const totalExpenses =  
+    food +  
+    transport +  
+    accommodation +  
+    books +  
+    entertainment;  
 
-    loadSavedBudget();
-    loadDashboard();
-    loadTransactions();
-    loadNotifications();
-    displayBudgetReport();
+const remainingBalance = income - totalExpenses;  
+
+// Save data  
+localStorage.setItem("income", income);  
+localStorage.setItem("totalExpenses", totalExpenses);  
+localStorage.setItem("remainingBalance", remainingBalance);  
+
+// Show results on budget.html  
+document.getElementById("totalExpenses").innerHTML =  
+    "R" + totalExpenses.toFixed(2);  
+
+document.getElementById("remainingBalance").innerHTML =  
+    "R" + remainingBalance.toFixed(2);  
+
+if (remainingBalance >= 0) {  
+    document.getElementById("budgetStatus").innerHTML =  
+        "✅ Within Budget";  
+} else {  
+    document.getElementById("budgetStatus").innerHTML =  
+        "❌ Over Budget";  
 }
 
-// =====================================
-// BUDGET CALCULATOR
-// =====================================
-
-function calculateBudget(event) {
-    event.preventDefault();
-
-    if (!currentUser) {
-        alert("Please log in first.");
-        return;
-    }
-
-    const income = Number(getElement("income").value);
-    const food = Number(getElement("food").value);
-    const transport = Number(getElement("transport").value);
-    const accommodation = Number(getElement("accommodation").value);
-    const books = Number(getElement("books").value);
-    const entertainment = Number(getElement("entertainment").value);
-
-    const values = [
-        income,
-        food,
-        transport,
-        accommodation,
-        books,
-        entertainment
-    ];
-
-    if (!values.every(Number.isFinite)) {
-        alert("Please enter valid numbers.");
-        return;
-    }
-
-    if (income <= 0) {
-        alert("Monthly income must be greater than zero.");
-        return;
-    }
-
-    if (values.slice(1).some(function (value) {
-        return value < 0;
-    })) {
-        alert("Expenses cannot be negative.");
-        return;
-    }
-
-    const totalExpenses =
-        food + transport + accommodation + books + entertainment;
-
-    const remainingBalance = income - totalExpenses;
-
-    let status;
-
-    if (remainingBalance < 0) {
-        status = "Over Budget";
-    } else if (remainingBalance === 0) {
-        status = "Fully Spent";
-    } else {
-        status = "Within Budget";
-    }
-
-    latestBudget = {
-        date: new Date().toISOString(),
-        income: income,
-        food: food,
-        transport: transport,
-        accommodation: accommodation,
-        books: books,
-        entertainment: entertainment,
-        totalExpenses: totalExpenses,
-        remainingBalance: remainingBalance,
-        status: status
-    };
-
-    // Save the latest budget
-    if (!saveJSON(userStorageKey("budget"), latestBudget)) {
-        latestBudget = null;
-        return;
-    }
-
-    // Save a history record
-    const transactions = getTransactions();
-
-    transactions.unshift(latestBudget);
-
-    // Keep the most recent 50 records
-    if (transactions.length > 50) {
-        transactions.length = 50;
-    }
-
-    if (!saveJSON(userStorageKey("history"), transactions)) {
-        return;
-    }
-
-    displayBudgetResult();
-    updateBudgetChart();
-    loadDashboard();
-    loadTransactions();
-    loadNotifications();
-    displayBudgetReport();
-
-    setText("chartMessage", "Your graph has been updated.");
-
-    const resultBox = getElement("budgetResult");
-
-    if (resultBox) {
-        resultBox.classList.remove("hidden");
-    }
+updateBudgetChart(
+income,
+food,
+transport,
+accommodation,
+books,
+entertainment,
+totalExpenses,
+remainingBalance
+);
+alert("Budget calculated successfully!");
 }
-
-// =====================================
-// DISPLAY BUDGET RESULT
-// =====================================
-
-function displayBudgetResult() {
-    if (!latestBudget) {
-        return;
-    }
-
-    setText("totalExpenses", money(latestBudget.totalExpenses));
-    setText("remainingBalance", money(latestBudget.remainingBalance));
-    setText("budgetStatus", latestBudget.status);
-
-    const resultBox = getElement("budgetResult");
-
-    if (resultBox) {
-        resultBox.classList.remove("hidden");
-    }
-}
-
-// =====================================
-// LOAD SAVED BUDGET
-// =====================================
-
-function loadSavedBudget() {
-    if (!currentUser) {
-        return;
-    }
-
-    latestBudget = readJSON(userStorageKey("budget"), null);
-
-    if (!latestBudget) {
-        setText("chartMessage", "Calculate your budget to display your graph.");
-        setText("healthMessage", "Calculate your budget to see your overview.");
-        setText("budgetAdvice", "Your budget advice will appear here.");
-        setText("expenseRate", "Expense rate: 0%");
-        setText("dashboardStatus", "Not calculated");
-        setText("dashboardIncome", money(0));
-        setText("dashboardExpenses", money(0));
-        setText("dashboardBalance", money(0));
-        setText("totalExpenses", money(0));
-        setText("remainingBalance", money(0));
-        setText("budgetStatus", "-");
-
-        const resultBox = getElement("budgetResult");
-
-        if (resultBox) {
-            resultBox.classList.add("hidden");
-        }
-
-        updateBudgetChart();
-        return;
-    }
-
-    getElement("income").value = latestBudget.income;
-    getElement("food").value = latestBudget.food;
-    getElement("transport").value = latestBudget.transport;
-    getElement("accommodation").value = latestBudget.accommodation;
-    getElement("books").value = latestBudget.books;
-    getElement("entertainment").value = latestBudget.entertainment;
-
-    displayBudgetResult();
-
-    setText("chartMessage", "Showing your saved budget.");
-    updateBudgetChart();
-}
-
-// =====================================
-// BUDGET GRAPH - CHART.JS
-// =====================================
-
-function updateBudgetChart() {
-    const canvas = getElement("budgetChart");
-
-    if (!canvas) {
-        console.error("Graph error: canvas #budgetChart was not found.");
-        return;
-    }
-
-    // Destroy the previous graph before creating a new one
-    if (budgetChart) {
-        budgetChart.destroy();
-        budgetChart = null;
-    }
-
-    if (typeof Chart === "undefined") {
-        setText(
-            "chartMessage",
-            "Chart.js could not load. Check your internet connection."
-        );
-
-        console.error("Chart.js is not loaded.");
-        return;
-    }
-
-    if (!latestBudget) {
-        return;
-    }
-
-    const darkMode = document.body.classList.contains("dark-mode");
-    const textColor = darkMode ? "#edf2f7" : "#243044";
-    const gridColor = darkMode ? "#354258" : "#dce3ec";
-
-    budgetChart = new Chart(canvas, {
-        type: "bar",
-
-        data: {
-            labels: [
-                "Income",
-                "Food",
-                "Transport",
-                "Accommodation",
-                "Books",
-                "Entertainment",
-                "Total Expenses",
-                "Balance"
-            ],
-
-            datasets: [{
-                label: "Amount (R)",
-                data: [
-                    latestBudget.income,
-                    latestBudget.food,
-                    latestBudget.transport,
-                    latestBudget.accommodation,
-                    latestBudget.books,
-                    latestBudget.entertainment,
-                    latestBudget.totalExpenses,
-                    latestBudget.remainingBalance
-                ],
-
-                backgroundColor: [
-                    "#0077cc",
-                    "#e6a23c",
-                    "#20a4a4",
-                    "#8e63ce",
-                    "#d96b8a",
-                    "#7b9f35",
-                    "#d9534f",
-                    "#16803c"
-                ],
-
-                borderWidth: 1,
-                borderRadius: 5
-            }]
-        },
-
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-
-            plugins: {
-                legend: {
-                    labels: {
-                        color: textColor
-                    }
-                },
-
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            return context.dataset.label + ": " +
-                                money(context.parsed.y);
-                        }
-                    }
-                }
-            },
-
-            scales: {
-                x: {
-                    ticks: {
-                        color: textColor,
-                        maxRotation: 45,
-                        minRotation: 0
-                    },
-
-                    grid: {
-                        color: gridColor
-                    }
-                },
-
-                y: {
-                    beginAtZero: true,
-
-                    ticks: {
-                        color: textColor,
-
-                        callback: function (value) {
-                            return "R" + Number(value).toLocaleString("en-ZA");
-                        }
-                    },
-
-                    grid: {
-                        color: gridColor
-                    }
-                }
-            }
-        }
-    });
-}
-
-// =====================================
-// DASHBOARD AND FINANCIAL OVERVIEW
-// =====================================
+// ==========================================
+// PART 3 - DASHBOARD
+// ==========================================
 
 function loadDashboard() {
-    if (!currentUser) {
-        return;
-    }
 
-    if (!latestBudget) {
-        setText("dashboardIncome", money(0));
-        setText("dashboardExpenses", money(0));
-        setText("dashboardBalance", money(0));
-        setText("dashboardStatus", "Not calculated");
-        setText("healthMessage", "Calculate your budget to see your overview.");
-        setText("budgetAdvice", "Your budget advice will appear here.");
-        setText("expenseRate", "Expense rate: 0%");
+const name = localStorage.getItem("fullName") || "Student";  
+const income = Number(localStorage.getItem("income")) || 0;  
+const expenses = Number(localStorage.getItem("totalExpenses")) || 0;  
+const balance = Number(localStorage.getItem("remainingBalance")) || 0;  
 
-        const progress = getElement("expenseProgress");
+// Welcome Message  
+if (document.getElementById("welcomeUser")) {  
+    document.getElementById("welcomeUser").innerHTML =  
+        "Welcome, " + name + " 👋";  
+}  
 
-        if (progress) {
-            progress.style.width = "0%";
-        }
+// Dashboard Cards  
+if (document.getElementById("dashIncome")) {  
+    document.getElementById("dashIncome").innerHTML =  
+        "R" + income.toFixed(2);  
+}  
 
-        return;
-    }
+if (document.getElementById("dashExpenses")) {  
+    document.getElementById("dashExpenses").innerHTML =  
+        "R" + expenses.toFixed(2);  
+}  
 
-    const budget = latestBudget;
-    const expenseRate = (budget.totalExpenses / budget.income) * 100;
-    const progressWidth = Math.min(expenseRate, 100);
+if (document.getElementById("dashBalance")) {  
+    document.getElementById("dashBalance").innerHTML =  
+        "R" + balance.toFixed(2);  
 
-    setText("dashboardIncome", money(budget.income));
-    setText("dashboardExpenses", money(budget.totalExpenses));
-    setText("dashboardBalance", money(budget.remainingBalance));
-    setText("dashboardStatus", budget.status);
+    document.getElementById("dashBalance").style.color =  
+        balance >= 0 ? "green" : "red";  
+}  
 
-    setText(
-        "healthMessage",
-        budget.remainingBalance < 0
-            ? "Your expenses are higher than your income."
-            : budget.remainingBalance === 0
-                ? "You have used your entire budget."
-                : "You still have money remaining after your expenses."
-    );
+// Financial Health  
+let health = 100;  
+let status = "🟢 Excellent";  
 
-    setText("expenseRate", "Expense rate: " + expenseRate.toFixed(1) + "%");
+if (income <= 0) {  
+    health = 0;  
+    status = "⚫ No Income";  
+} else if (balance < 0) {  
+    health = 0;  
+    status = "🔴 Critical";  
+} else {  
+    const percentage = (balance / income) * 100;  
 
-    const progress = getElement("expenseProgress");
+    if (percentage >= 50) {  
+        health = 100;  
+        status = "🟢 Excellent";  
+    } else if (percentage >= 20) {  
+        health = 75;  
+        status = "🟡 Good";  
+    } else if (percentage > 0) {  
+        health = 50;  
+        status = "🟠 Fair";  
+    } else {  
+        health = 25;  
+        status = "🔴 Poor";  
+    }  
+}  
 
-    if (progress) {
-        progress.style.width = progressWidth + "%";
+if (document.getElementById("healthScore")) {  
+    document.getElementById("healthScore").innerHTML = health + "%";  
+}  
 
-        if (expenseRate > 100) {
-            progress.style.backgroundColor = "#c62828";
-        } else if (expenseRate >= 80) {
-            progress.style.backgroundColor = "#e6a23c";
-        } else {
-            progress.style.backgroundColor = "#16803c";
-        }
-    }
+if (document.getElementById("healthStatus")) {  
+    document.getElementById("healthStatus").innerHTML = status;  
+}  
 
-    let advice;
+// Rates  
+if (income > 0) {  
 
-    if (budget.remainingBalance < 0) {
-        advice = "Your expenses exceed your income. Review optional spending and look for expenses you can reduce.";
-    } else if (budget.remainingBalance === 0) {
-        advice = "Your full income is allocated. Review your expenses to see whether you can leave room for unexpected costs.";
-    } else if (expenseRate >= 80) {
-        advice = "You have a remaining balance, but most of your income is already allocated. Plan carefully for unexpected costs.";
-    } else {
-        advice = "Your expenses are below your income. Consider setting aside part of your remaining balance for future needs.";
-    }
+    if (document.getElementById("savingRate")) {  
+        document.getElementById("savingRate").innerHTML =  
+            ((balance / income) * 100).toFixed(1) + "%";  
+    }  
 
-    setText("budgetAdvice", advice);
+    if (document.getElementById("spendingRate")) {  
+        document.getElementById("spendingRate").innerHTML =  
+            ((expenses / income) * 100).toFixed(1) + "%";  
+    }  
+}  
+
+// Advice  
+if (document.getElementById("dashboardAdvice")) {  
+
+    if (balance >= 0) {  
+        document.getElementById("dashboardAdvice").innerHTML =  
+            "✅ Great! Keep saving every month.";  
+    } else {  
+        document.getElementById("dashboardAdvice").innerHTML =  
+            "⚠ You are spending more than your income.";  
+    }  
+}  
+
+// Progress Bar  
+if (document.getElementById("budgetProgress")) {  
+
+    let progress = income > 0 ? (expenses / income) * 100 : 0;  
+
+    if (progress > 100) {  
+        progress = 100;  
+    }  
+
+    document.getElementById("budgetProgress").style.width =  
+        progress + "%";  
+
+    if (document.getElementById("progressText")) {  
+        document.getElementById("progressText").innerHTML =  
+            progress.toFixed(0) + "%";  
+    }  
 }
 
-// =====================================
-// TRANSACTION / BUDGET HISTORY
-// =====================================
-
-function getTransactions() {
-    if (!currentUser) {
-        return [];
-    }
-
-    return readJSON(userStorageKey("history"), []);
 }
-
-function loadTransactions() {
-    const tableBody = getElement("transactionList");
-
-    if (!tableBody) {
-        return;
-    }
-
-    tableBody.replaceChildren();
-
-    const transactions = getTransactions();
-
-    if (transactions.length === 0) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-
-        cell.colSpan = 4;
-        cell.textContent = "No budget history yet.";
-
-        row.appendChild(cell);
-        tableBody.appendChild(row);
-        return;
-    }
-
-    transactions.forEach(function (transaction) {
-        const row = document.createElement("tr");
-
-        const dateCell = document.createElement("td");
-        const incomeCell = document.createElement("td");
-        const expensesCell = document.createElement("td");
-        const balanceCell = document.createElement("td");
-
-        dateCell.textContent = new Date(transaction.date).toLocaleString();
-        incomeCell.textContent = money(transaction.income);
-        expensesCell.textContent = money(transaction.totalExpenses);
-        balanceCell.textContent = money(transaction.remainingBalance);
-
-        row.append(
-            dateCell,
-            incomeCell,
-            expensesCell,
-            balanceCell
-        );
-
-        tableBody.appendChild(row);
-    });
+document.addEventListener("DOMContentLoaded", function () {
+if (document.getElementById("welcomeUser")) {
+loadDashboard();
 }
-
-function clearHistory() {
-    if (!currentUser) {
-        return;
-    }
-
-    const confirmed = confirm(
-        "Are you sure you want to delete your budget history?"
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    if (!saveJSON(userStorageKey("history"), [])) {
-        return;
-    }
-
-    loadTransactions();
-    alert("Budget history cleared.");
-}
-
-// =====================================
-// NOTIFICATIONS
-// =====================================
-
-function loadNotifications() {
-    const list = getElement("notificationList");
-
-    if (!list) {
-        return;
-    }
-
-    list.replaceChildren();
-
-    const messages = [];
-
-    if (!latestBudget) {
-        messages.push("Enter your income and expenses to begin.");
-    } else {
-        if (latestBudget.remainingBalance < 0) {
-            messages.push("Warning: your expenses exceed your income.");
-        } else if (latestBudget.remainingBalance === 0) {
-            messages.push("Your full income has been allocated.");
-        } else {
-            messages.push(
-                "You have " + money(latestBudget.remainingBalance) +
-                " remaining."
-            );
-        }
-
-        if (latestBudget.totalExpenses > 0) {
-            messages.push(
-                "Your largest expense is " +
-                getLargestExpense(latestBudget) + "."
-            );
-        }
-    }
-
-    messages.forEach(function (message) {
-        const item = document.createElement("li");
-        item.textContent = message;
-        list.appendChild(item);
-    });
-}
-
-function getLargestExpense(budget) {
-    const categories = [
-        { name: "Food", amount: budget.food },
-        { name: "Transport", amount: budget.transport },
-        { name: "Accommodation", amount: budget.accommodation },
-        { name: "Books and stationery", amount: budget.books },
-        { name: "Entertainment", amount: budget.entertainment }
-    ];
-
-    categories.sort(function (a, b) {
-        return b.amount - a.amount;
-    });
-
-    return categories[0].name;
-}
-
-// =====================================
-// PDF REPORT
-// =====================================
-
-function displayBudgetReport() {
-    const message = latestBudget
-        ? "Your latest budget is ready to download."
-        : "Calculate a budget before downloading a report.";
-
-    setText("reportMessage", message);
-}
-
+});
 function downloadPDF() {
-    if (!latestBudget || !currentUser) {
-        alert("Please calculate a budget before downloading a report.");
-        return;
-    }
 
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-        alert("The PDF library could not load. Check your internet connection.");
-        return;
-    }
+const { jsPDF } = window.jspdf;  
+const doc = new jsPDF();  
 
-    const jsPDF = window.jspdf.jsPDF;
-    const doc = new jsPDF();
-    const budget = latestBudget;
+// Get stored values  
+const name = localStorage.getItem("fullName") || "Student";  
+const income = localStorage.getItem("income") || "0";  
+const expenses = localStorage.getItem("totalExpenses") || "0";  
+const balance = localStorage.getItem("remainingBalance") || "0";  
 
-    doc.setFontSize(20);
-    doc.text("Student Budget Tracker", 20, 20);
+// Budget Status  
+let status = Number(balance) >= 0 ? "Within Budget" : "Over Budget";  
 
-    doc.setFontSize(12);
-    doc.text("Budget Report", 20, 32);
-    doc.text("Student: " + currentUser.name, 20, 44);
-    doc.text("Student number: " + currentUser.studentNumber, 20, 54);
-    doc.text(
-        "Date: " + new Date(budget.date).toLocaleString(),
-        20,
-        64
-    );
+// PDF Title  
+doc.setFontSize(18);  
+doc.text("Student Budget Tracker", 20, 20);  
 
-    const lines = [
-        ["Monthly income", budget.income],
-        ["Food", budget.food],
-        ["Transport", budget.transport],
-        ["Accommodation", budget.accommodation],
-        ["Books and stationery", budget.books],
-        ["Entertainment", budget.entertainment],
-        ["Total expenses", budget.totalExpenses],
-        ["Remaining balance", budget.remainingBalance]
-    ];
+doc.setFontSize(14);  
+doc.text("Budget Report", 20, 30);  
 
-    let y = 82;
+// User Details  
+doc.setFontSize(12);  
+doc.text("Student: " + name, 20, 45);  
+doc.text("Income: R" + income, 20, 55);  
+doc.text("Expenses: R" + expenses, 20, 65);  
+doc.text("Balance: R" + balance, 20, 75);  
+doc.text("Status: " + status, 20, 85);  
 
-    lines.forEach(function (line) {
-        doc.text(line[0] + ": " + money(line[1]), 20, y);
-        y += 10;
-    });
+doc.save("Student Budget Trackr_Report.pdf");
 
-    doc.text("Budget status: " + budget.status, 20, y + 5);
+}
+document.getElementById("reportIncome").innerHTML =
+"R" + (Number(localStorage.getItem("income")) || 0).toFixed(2);
 
-    doc.save("student-budget-report.pdf");
+document.getElementById("reportExpenses").innerHTML =
+"R" + (Number(localStorage.getItem("totalExpenses")) || 0).toFixed(2);
 
-    setText("reportMessage", "Your PDF report has been generated.");
+document.getElementById("reportBalance").innerHTML =
+"R" + (Number(localStorage.getItem("remainingBalance")) || 0).toFixed(2);
+// ==========================
+// STUDENT BUDGET TRACKER AI
+// ==========================
+
+function askAI() {
+const questionElement = document.getElementById("question");
+
+if (!questionElement) {  
+    alert("AI question field not found.");  
+    return;  
+}  
+
+const question = questionElement.value.trim();  
+let answer = "";  
+
+switch (question) {  
+    case "save":  
+    case "How can I save more money?":  
+        answer = "💰 Save at least 10% of your monthly income before spending.";  
+        break;  
+
+    case "food":  
+    case "How do I reduce food expenses?":  
+        answer = "🍽️ Plan your meals, cook at home, and avoid buying unnecessary snacks.";  
+        break;  
+
+    case "transport":  
+    case "How can I lower transport costs?":  
+        answer = "🚌 Use public transport, walk when possible, or share rides with classmates.";  
+        break;  
+
+    case "budget":  
+        answer = "📊 Review your expenses and reduce unnecessary spending.";  
+        break;  
+
+    default:  
+        answer = "🤖 Please choose a budgeting question first.";  
+}  
+
+const responseElement =  
+    document.getElementById("aiAnswer") ||  
+    document.getElementById("aiResponse");  
+
+if (responseElement) {  
+    responseElement.textContent = answer;  
 }
 
-// =====================================
-// DARK MODE
-// =====================================
+}
+// ==========================
+// Student Budget Tracker AI
+// ==========================
+// ==========================================
+// PART 4 - DARK MODE
+// ==========================================
 
-function applyTheme(theme) {
-    const darkMode = theme === "dark";
+function applyTheme() {
 
-    document.body.classList.toggle("dark-mode", darkMode);
+const darkModeEnabled =  
+    localStorage.getItem("darkMode") === "true";  
 
-    setText(
-        "darkModeBtn",
-        darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"
-    );
+document.body.classList.toggle(  
+    "dark-mode",  
+    darkModeEnabled  
+);  
 
-    // Update graph colours after changing theme
-    if (latestBudget) {
-        updateBudgetChart();
-    }
+const themeButton = document.getElementById("themeToggle");  
+
+if (themeButton) {  
+    themeButton.textContent = darkModeEnabled  
+        ? "☀️ Enable Light Mode"  
+        : "🌙 Enable Dark Mode";  
+}
+
 }
 
 function toggleDarkMode() {
-    const currentlyDark = document.body.classList.contains("dark-mode");
-    const newTheme = currentlyDark ? "light" : "dark";
 
-    try {
-        localStorage.setItem(THEME_KEY, newTheme);
-    } catch (error) {
-        console.error("Could not save theme:", error);
-    }
+const currentlyDark =  
+    document.body.classList.contains("dark-mode");  
 
-    applyTheme(newTheme);
+localStorage.setItem(  
+    "darkMode",  
+    String(!currentlyDark)  
+);  
+
+applyTheme();
+
 }
 
-// =====================================
-// PASSWORD VISIBILITY
-// =====================================
+// ==========================================
+// PART 5 - NOTIFICATION CENTRE
+// ==========================================
 
-function setupPasswordVisibility() {
-    const loginToggle = getElement("showLoginPassword");
-    const loginPassword = getElement("loginPassword");
+function getNotifications() {
 
-    if (loginToggle && loginPassword) {
-        loginToggle.addEventListener("change", function () {
-            loginPassword.type = this.checked ? "text" : "password";
-        });
-    }
+try {  
 
-    const signupToggle = getElement("showSignupPassword");
-    const signupPassword = getElement("signupPassword");
-    const confirmPassword = getElement("confirmPassword");
+    const saved = localStorage.getItem("budgetNotifications");  
 
-    if (signupToggle && signupPassword && confirmPassword) {
-        signupToggle.addEventListener("change", function () {
-            const type = this.checked ? "text" : "password";
+    return saved ? JSON.parse(saved) : [];  
 
-            signupPassword.type = type;
-            confirmPassword.type = type;
-        });
-    }
+} catch (error) {  
+
+    console.error("Could not load notifications:", error);  
+
+    return [];  
+
 }
 
-// =====================================
-// EVENT LISTENERS AND STARTUP
-// =====================================
+}
+
+function saveNotifications(notifications) {
+
+localStorage.setItem(  
+    "budgetNotifications",  
+    JSON.stringify(notifications)  
+);
+
+}
+
+function generateBudgetNotifications() {
+
+const income = Number(localStorage.getItem("income")) || 0;  
+
+const expenses =  
+    Number(localStorage.getItem("totalExpenses")) || 0;  
+
+const balance =  
+    Number(localStorage.getItem("remainingBalance")) || 0;  
+
+const monthKey = new Date().toISOString().slice(0, 7);  
+
+const notifications = [];  
+
+if (income <= 0) {  
+
+    notifications.push({  
+        id: "no-income-" + monthKey,  
+        title: "💰 Set Your Monthly Income",  
+        message: "Enter your monthly income to start tracking your budget.",  
+        read: false  
+    });  
+
+} else {  
+
+    const spendingRate = (expenses / income) * 100;  
+
+    if (balance < 0) {  
+
+        notifications.push({  
+            id: "over-budget-" + monthKey,  
+            title: "⚠️ Budget Alert",  
+            message: "Your expenses exceed your income. Review your spending.",  
+            read: false  
+        });  
+
+    } else if (spendingRate >= 80) {  
+
+        notifications.push({  
+            id: "high-spending-" + monthKey,  
+            title: "🔔 Spending Alert",  
+            message: "You have used at least 80% of your monthly income.",  
+            read: false  
+        });  
+
+    } else {  
+
+        notifications.push({  
+            id: "budget-ok-" + monthKey,  
+            title: "✅ Budget Update",  
+            message: "Your current expenses are within your income.",  
+            read: false  
+        });  
+
+    }  
+
+    if (balance > 0) {  
+
+        notifications.push({  
+            id: "save-" + monthKey,  
+            title: "💵 Savings Reminder",  
+            message: "Your remaining balance is R" +  
+                balance.toFixed(2) +  
+                ". Consider saving some of it.",  
+            read: false  
+        });  
+
+    }  
+
+}  
+
+// Keep read status for notifications that already existed.  
+const oldNotifications = getNotifications();  
+
+const updatedNotifications = notifications.map(notification => {  
+
+    const existing = oldNotifications.find(  
+        item => item.id === notification.id  
+    );  
+
+    if (existing) {  
+        notification.read = existing.read;  
+    }  
+
+    return notification;  
+
+});  
+
+saveNotifications(updatedNotifications);
+
+}
+
+function displayNotifications() {
+
+const notificationList =  
+    document.getElementById("notificationList");  
+
+const notificationCount =  
+    document.getElementById("notificationCount");  
+
+if (!notificationList || !notificationCount) {  
+    return;  
+}  
+
+const notifications = getNotifications();  
+
+const unreadCount = notifications.filter(  
+    notification => !notification.read  
+).length;  
+
+notificationCount.textContent = unreadCount;  
+
+if (notifications.length === 0) {  
+
+    notificationList.innerHTML =  
+        "<p>You're all caught up! 🎉</p>";  
+
+    return;  
+
+}  
+
+notificationList.innerHTML = "";  
+
+notifications.forEach(notification => {  
+
+    const item = document.createElement("div");  
+
+    item.className = "notification-item " +  
+        (notification.read ? "read" : "unread");  
+
+    const title = document.createElement("strong");  
+    title.textContent = notification.title;  
+
+    const message = document.createElement("p");  
+    message.textContent = notification.message;  
+
+    item.appendChild(title);  
+    item.appendChild(message);  
+
+    notificationList.appendChild(item);  
+
+});
+
+}
+
+function markNotificationsRead() {
+
+const notifications = getNotifications();  
+
+notifications.forEach(notification => {  
+    notification.read = true;  
+});  
+
+saveNotifications(notifications);  
+
+displayNotifications();
+
+}
+
+function clearNotifications() {
+
+if (!confirm("Are you sure you want to clear all notifications?")) {  
+    return;  
+}  
+
+saveNotifications([]);  
+
+displayNotifications();
+
+}
+
+// ==========================================
+// PART 6 - INITIALISE DASHBOARD FEATURES
+// ==========================================
 
 document.addEventListener("DOMContentLoaded", function () {
-    setText("currentYear", new Date().getFullYear());
 
-    // Forms
-    getElement("loginForm").addEventListener("submit", login);
-    getElement("signupForm").addEventListener("submit", register);
-    getElement("budgetForm").addEventListener("submit", calculateBudget);
+applyTheme();  
 
-    // Navigation
-    getElement("showSignupBtn").addEventListener("click", function () {
-        showPage("signupPage");
-    });
+if (document.getElementById("notificationList")) {  
 
-    getElement("showLoginBtn").addEventListener("click", function () {
-        showPage("loginPage");
-    });
+    generateBudgetNotifications();  
 
-    getElement("logoutBtn").addEventListener("click", logout);
+    displayNotifications();  
 
-    // Other buttons
-    getElement("darkModeBtn").addEventListener("click", toggleDarkMode);
-    getElement("clearHistoryBtn").addEventListener("click", clearHistory);
-    getElement("downloadPDFBtn").addEventListener("click", downloadPDF);
+}
 
-    // Clear only the form fields when Reset is clicked.
-    // The last saved calculation remains available.
-    getElement("budgetForm").addEventListener("reset", function () {
-        setTimeout(function () {
-            getElement("budgetResult").classList.add("hidden");
-        }, 0);
-    });
-
-    setupPasswordVisibility();
-
-    // Load saved theme
-    let savedTheme = "light";
-
-    try {
-        savedTheme = localStorage.getItem(THEME_KEY) || "light";
-    } catch (error) {
-        console.error("Could not load theme:", error);
-    }
-
-    applyTheme(savedTheme);
-
-    // Restore this browser tab's session if possible
-    let savedEmail = null;
-
-    try {
-        savedEmail = sessionStorage.getItem(SESSION_KEY);
-    } catch (error) {
-        console.error("Could not restore session:", error);
-    }
-
-    if (savedEmail) {
-        const user = getUsers().find(function (savedUser) {
-            return savedUser.email.toLowerCase() ===
-                savedEmail.toLowerCase();
-        });
-
-        if (user) {
-            currentUser = {
-                name: user.name,
-                studentNumber: user.studentNumber,
-                email: user.email
-            };
-
-            openDashboard();
-            return;
-        }
-    }
-
-    showPage("loginPage");
 });
+// ==========================================
+// PART 7 - TRANSACTION HISTORY
+// ==========================================
+
+// Get saved transactions
+function getTransactions() {
+try {
+return JSON.parse(
+localStorage.getItem("budgetTransactions")
+) || [];
+} catch (error) {
+console.error("Error loading transactions:", error);
+return [];
+}
+}
+
+// Save transactions
+function saveTransactions(transactions) {
+localStorage.setItem(
+"budgetTransactions",
+JSON.stringify(transactions)
+);
+}
+
+// Add a new transaction
+function addTransaction() {
+
+const typeElement = document.getElementById("transactionType");  
+const descriptionElement = document.getElementById("transactionDescription");  
+const amountElement = document.getElementById("transactionAmount");  
+const dateElement = document.getElementById("transactionDate");  
+
+if (!typeElement || !descriptionElement || !amountElement || !dateElement) {  
+    alert("Transaction form elements are missing from your HTML.");  
+    return;  
+}  
+
+const type = typeElement.value;  
+const description = descriptionElement.value.trim();  
+const amount = Number(amountElement.value);  
+const date = dateElement.value;  
+
+if (!description) {  
+    alert("Please enter a transaction description.");  
+    return;  
+}  
+
+if (!Number.isFinite(amount) || amount <= 0) {  
+    alert("Please enter an amount greater than zero.");  
+    return;  
+}  
+
+if (!date || Number.isNaN(Date.parse(date))) {  
+    alert("Please select a valid transaction date.");  
+    return;  
+}  
+
+if (type !== "income" && type !== "expense") {  
+    alert("Please select income or expense.");  
+    return;  
+}  
+
+const transaction = {  
+    id: Date.now().toString() + Math.random().toString(36).slice(2),  
+    type: type,  
+    description: description,  
+    amount: amount,  
+    date: date  
+};  
+
+const transactions = getTransactions();  
+
+transactions.push(transaction);  
+
+saveTransactions(transactions);
+
+displayTransactions();
+
+updateTransactionDashboard();
+
+// Clear the form  
+descriptionElement.value = "";  
+amountElement.value = "";  
+
+alert("Transaction added successfully! ✅");
+
+}
+
+// Display transaction history
+function displayTransactions() {
+
+const transactionList = document.getElementById("transactionList");  
+
+if (!transactionList) {  
+    return;  
+}  
+
+const transactions = getTransactions();  
+
+// Newest transactions first  
+transactions.sort((a, b) => {  
+    return new Date(b.date) - new Date(a.date) ||  
+        b.id.localeCompare(a.id);  
+});  
+
+transactionList.innerHTML = "";  
+
+if (transactions.length === 0) {  
+    transactionList.innerHTML =  
+        "<p>No transactions recorded yet.</p>";  
+    return;  
+}  
+
+transactions.forEach(transaction => {  
+
+    const item = document.createElement("div");  
+    item.className = "transaction-item";  
+
+    const details = document.createElement("div");  
+
+    const description = document.createElement("strong");  
+    description.textContent = transaction.description;  
+
+    const date = document.createElement("p");  
+    date.textContent = transaction.date;  
+
+    const amount = document.createElement("p");  
+    amount.textContent =  
+        (transaction.type === "income" ? "+ R" : "- R") +  
+        Number(transaction.amount).toFixed(2);  
+
+    amount.className =  
+        transaction.type === "income"  
+            ? "transaction-income"  
+            : "transaction-expense";  
+
+    const deleteButton = document.createElement("button");  
+    deleteButton.textContent = "Delete";  
+    deleteButton.type = "button";  
+
+    deleteButton.addEventListener("click", function () {  
+        deleteTransaction(transaction.id);  
+    });  
+
+    details.appendChild(description);  
+    details.appendChild(date);  
+    details.appendChild(amount);  
+
+    item.appendChild(details);  
+    item.appendChild(deleteButton);  
+
+    transactionList.appendChild(item);  
+});
+
+}
+
+// Delete a transaction
+function deleteTransaction(id) {
+
+if (!confirm("Are you sure you want to delete this transaction?")) {  
+    return;  
+}  
+
+const transactions = getTransactions().filter(  
+    transaction => transaction.id !== id  
+);  
+
+saveTransactions(transactions);
+
+displayTransactions();
+
+updateTransactionDashboard();
+
+alert("Transaction deleted successfully.");
+
+}
+
+// ==========================================
+// INITIALISE TRANSACTION HISTORY
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+if (document.getElementById("transactionList")) {  
+    displayTransactions();  
+}  
+
+updateTransactionDashboard();
+
+});
+// ==========================================
+// UPDATE TRANSACTION SUMMARY
+// ==========================================
+
+function updateTransactionDashboard() {
+
+const transactions = getTransactions();  
+
+let totalIncome = 0;  
+let totalExpenses = 0;  
+
+transactions.forEach(function(transaction) {  
+
+    const amount = Number(transaction.amount);  
+
+    if (!Number.isFinite(amount) || amount <= 0) {  
+        return;  
+    }  
+
+    if (transaction.type === "income") {  
+        totalIncome += amount;  
+    }  
+
+    if (transaction.type === "expense") {  
+        totalExpenses += amount;  
+    }  
+
+});  
+
+const balance = totalIncome - totalExpenses;  
+
+// Update summary cards  
+const incomeCard =  
+    document.getElementById("transactionTotalIncome");  
+
+const expensesCard =  
+    document.getElementById("transactionTotalExpenses");  
+
+const balanceCard =  
+    document.getElementById("transactionTotalBalance");  
+
+if (incomeCard) {  
+    incomeCard.textContent =  
+        "R" + totalIncome.toFixed(2);  
+}  
+
+if (expensesCard) {  
+    expensesCard.textContent =  
+        "R" + totalExpenses.toFixed(2);  
+}  
+
+if (balanceCard) {  
+    balanceCard.textContent =  
+        "R" + balance.toFixed(2);  
+}  
+
+// Save calculated totals  
+localStorage.setItem("transactionIncome", totalIncome);  
+localStorage.setItem("transactionExpenses", totalExpenses);  
+localStorage.setItem("transactionBalance", balance);  
+
+console.log("Transactions:", transactions);  
+console.log("Total income:", totalIncome);  
+console.log("Total expenses:", totalExpenses);  
+console.log("Balance:", balance);
+
+}
+
+let budgetChartInstance = null;
+
+function updateBudgetChart(
+income,
+food,
+transport,
+accommodation,
+books,
+entertainment,
+totalExpenses,
+remainingBalance
+) {
+const canvas = document.getElementById("budgetChart");
+
+if (!canvas || typeof Chart === "undefined") {  
+    return;  
+}  
+
+if (budgetChartInstance) {  
+    budgetChartInstance.destroy();  
+}  
+
+budgetChartInstance = new Chart(canvas, {  
+    type: "bar",  
+    data: {  
+        labels: [  
+            "Income",  
+            "Food",  
+            "Transport",  
+            "Accommodation",  
+            "Books",  
+            "Entertainment",  
+            "Total Expenses",  
+            "Balance"  
+        ],  
+        datasets: [{  
+            label: "Amount (R)",  
+            data: [  
+                income,  
+                food,  
+                transport,  
+                accommodation,  
+                books,  
+                entertainment,  
+                totalExpenses,  
+                remainingBalance  
+            ],  
+            backgroundColor: [  
+                "#2563eb",  
+                "#f59e0b",  
+                "#8b5cf6",  
+                "#06b6d4",  
+                "#ec4899",  
+                "#f97316",  
+                "#dc2626",  
+                remainingBalance >= 0 ? "#16a34a" : "#991b1b"  
+            ]  
+        }]  
+    },  
+    options: {  
+        responsive: true,  
+        scales: {  
+            y: {  
+                beginAtZero: true,  
+                ticks: {  
+                    callback: value => "R" + value  
+                }  
+            }  
+        }  
+    }  
+});
+
+}
+}
