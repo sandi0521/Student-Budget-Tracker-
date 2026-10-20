@@ -1,10 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Budget Tracker| Budget Calculator</title>
+
+    <title>Student Budget Tracker | Budget Calculator</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -20,52 +22,118 @@
 
     <h2>Enter Your Monthly Budget</h2>
 
-    <label>Monthly Income</label>
-    <input type="number" id="income" placeholder="Enter Income">
+    <label for="income">Monthly Income (R)</label>
+    <input
+        type="number"
+        id="income"
+        placeholder="Enter income"
+        min="0.01"
+        step="0.01"
+        required
+    >
 
-    <label>Food</label>
-    <input type="number" id="food" placeholder="Food Expense">
+    <label for="food">Food (R)</label>
+    <input
+        type="number"
+        id="food"
+        placeholder="Food expense"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+    >
 
-    <label>Transport</label>
-    <input type="number" id="transport" placeholder="Transport Expense">
+    <label for="transport">Transport (R)</label>
+    <input
+        type="number"
+        id="transport"
+        placeholder="Transport expense"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+    >
 
-    <label>Accommodation</label>
-    <input type="number" id="accommodation" placeholder="Accommodation Expense">
+    <label for="accommodation">Accommodation (R)</label>
+    <input
+        type="number"
+        id="accommodation"
+        placeholder="Accommodation expense"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+    >
 
-    <label>Books</label>
-    <input type="number" id="books" placeholder="Books Expense">
+    <label for="books">Books (R)</label>
+    <input
+        type="number"
+        id="books"
+        placeholder="Books expense"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+    >
 
-    <label>Entertainment</label>
-    <input type="number" id="entertainment" placeholder="Entertainment Expense">
+    <label for="entertainment">Entertainment (R)</label>
+    <input
+        type="number"
+        id="entertainment"
+        placeholder="Entertainment expense"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+    >
 
-    <button onclick="calculateBudget()">
+    <button type="button" onclick="calculateBudget()">
         Calculate Budget
     </button>
 
     <div class="menu-card">
 
         <h3>Budget Summary</h3>
-         
-        <p><strong>Total Expenses:</strong> <span id="totalExpenses">R0</span></p>
 
-        <p><strong>Remaining Balance:</strong> <span id="remainingBalance">R0</span></p>
+        <p>
+            <strong>Total Expenses:</strong>
+            <span id="totalExpenses">R0.00</span>
+        </p>
 
-        <p><strong>Status:</strong> <span id="budgetStatus">-</span></p>
+        <p>
+            <strong>Remaining Balance:</strong>
+            <span id="remainingBalance">R0.00</span>
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            <span id="budgetStatus">-</span>
+        </p>
 
     </div>
-      <div class="menu-card chart-card">
-    <h3>Budget Graph</h3>
-    <canvas id="budgetChart"></canvas>
-      </div>
-    <button onclick="window.location.href='dashboard.html'">
+
+    <div class="menu-card chart-card">
+
+        <h3>Budget Graph</h3>
+
+        <div class="chart-container">
+            <canvas id="budgetChart"></canvas>
+        </div>
+
+    </div>
+
+    <button
+        type="button"
+        onclick="window.location.href='dashboard.html'"
+    >
         Back to Dashboard
     </button>
 
 </div>
 
+<!-- Chart.js must load before script.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>
 
 </body>
-
 </html>
