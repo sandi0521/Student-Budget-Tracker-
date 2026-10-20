@@ -146,7 +146,16 @@ function calculateBudget() {
         document.getElementById("budgetStatus").innerHTML =
             "❌ Over Budget";
     }
-
+updateBudgetChart(
+    income,
+    food,
+    transport,
+    accommodation,
+    books,
+    entertainment,
+    totalExpenses,
+    remainingBalance
+);
     alert("Budget calculated successfully!");
 }
 // ==========================================
