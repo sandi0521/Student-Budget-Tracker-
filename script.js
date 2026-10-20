@@ -151,16 +151,6 @@ if (remainingBalance >= 0) {
         "❌ Over Budget";  
 }
 
-updateBudgetChart(
-income,
-food,
-transport,
-accommodation,
-books,
-entertainment,
-totalExpenses,
-remainingBalance
-);
 alert("Budget calculated successfully!");
 }
 // ==========================================
@@ -890,6 +880,3 @@ console.log("Total expenses:", totalExpenses);
 console.log("Balance:", balance);
 
 }
-
-
-
