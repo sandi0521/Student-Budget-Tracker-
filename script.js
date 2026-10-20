@@ -955,3 +955,4 @@ function updateBudgetChart(
         }
     });
 }
+}                
