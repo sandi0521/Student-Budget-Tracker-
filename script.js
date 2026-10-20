@@ -873,3 +873,76 @@ function updateTransactionDashboard() {
     console.log("Total expenses:", totalExpenses);
     console.log("Balance:", balance);
 }
+
+let budgetChartInstance = null;
+
+function updateBudgetChart(
+    income,
+    food,
+    transport,
+    accommodation,
+    books,
+    entertainment,
+    totalExpenses,
+    remainingBalance
+) {
+    const canvas = document.getElementById("budgetChart");
+
+    if (!canvas || typeof Chart === "undefined") {
+        return;
+    }
+
+    if (budgetChartInstance) {
+        budgetChartInstance.destroy();
+    }
+
+    budgetChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: [
+                "Income",
+                "Food",
+                "Transport",
+                "Accommodation",
+                "Books",
+                "Entertainment",
+                "Total Expenses",
+                "Balance"
+            ],
+            datasets: [{
+                label: "Amount (R)",
+                data: [
+                    income,
+                    food,
+                    transport,
+                    accommodation,
+                    books,
+                    entertainment,
+                    totalExpenses,
+                    remainingBalance
+                ],
+                backgroundColor: [
+                    "#2563eb",
+                    "#f59e0b",
+                    "#8b5cf6",
+                    "#06b6d4",
+                    "#ec4899",
+                    "#f97316",
+                    "#dc2626",
+                    remainingBalance >= 0 ? "#16a34a" : "#991b1b"
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => "R" + value
+                    }
+                }
+            }
+        }
+    });
+}
